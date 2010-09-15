@@ -4,8 +4,15 @@
       // Use a function since the div is added later
       return e.children('form, h3, div')
     }
+    function createMsg(text, error) {
+      var msg = $('<div class="system-message notice">').text(text)
+      if (error) {
+        msg.removeClass('notice').addClass('error')
+      }
+      return msg.hide()
+    }
     var feed = $('#feedback-box'),
-        toggler = $('#feedback-toggler'),
+        toggler = $('#feedback-toggler')
     feed.css('display', 'block').data('showing', false)
         .css('bottom', $('#footer').height()) // Might calculate a better position later
     toHide(feed).hide()
@@ -39,13 +46,17 @@
         dataType: 'json',
         success: function(data) {
           form.fadeOut().empty()
-          var msg = $('<div class="system-message notice">').text(data.message).hide()
+          var msg = createMsg(data.message)
           feed.append(msg)
           msg.fadeIn()
           setTimeout(function(){
-            if (feed.data('showing')) 
+            if (feed.data('showing'))
               toggler.trigger('click')
           }, 4000)
+        },
+        error: function() {
+          var msg = createMsg('Failed to submit feedback!', true)
+          $('h3', feed).after(msg.fadeIn('slow'))
         }
       })
       return false
@@ -61,7 +72,11 @@
         dataType: 'json',
         success: function (data) {
           link.parent('li').fadeOut('slow')
-        }
+        },
+        error: function() {
+          var msg = createMsg('Failed to delete feedback!', true)
+          $('h1').after(msg.fadeIn('slow'))
+       }
       })
       return false
     })
