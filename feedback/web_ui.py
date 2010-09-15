@@ -28,11 +28,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-'''
-Created on 14 Sep 2010
-
-@author: enmarkp
-'''
+# Created on 14 Sep 2010
+# @author enmarkp
+import re
 from datetime import datetime
 from genshi.builder import tag
 from genshi.filters.transform import Transformer
@@ -56,7 +54,8 @@ class Feedback(Component):
     implements(ITemplateStreamFilter, IRequestHandler, INavigationContributor,
                IEnvironmentSetupParticipant, ITemplateProvider)
     
-    _schema = [Table('project_feedback')[
+    _schema = [Table('project_feedback', key='id')[
+                   Column('id', type='int', auto_increment=True),
                    Column('author'),
                    Column('feedback'),
                    Column('path'),
@@ -79,10 +78,11 @@ class Feedback(Component):
     # ITemplateStreamFilter
     
     def filter_stream(self, req, method, filename, stream, data):
-        if req.authname == 'anonymous':# or filename == 'feedback.html':
+        if req.authname == 'anonymous':
             return stream
         add_stylesheet(req, 'feedback/feedback.css')
         add_javascript(req, 'feedback/feedback.js')
+        add_javascript(req, 'common/js/wikitoolbar.js')
         tmpl = TemplateLoader(self.get_templates_dirs()).load('feedback-box.html')
         path = req.path_info
         if req.query_string:
@@ -92,41 +92,61 @@ class Feedback(Component):
         return stream
     
     # IRequestHandler
-    
+    _url_re = re.compile(r'^/feedback(?:/(\d+))?/?$')
     def match_request(self, req):
-        return req.path_info == '/feedback'
+        m = self._url_re.search(req.path_info)
+        if m is None:
+            return False
+        id_ = m.group(1)
+        req.args['feedback_id'] = id_ and int(id_) or None
+        return True
     
     def process_request(self, req):
         feedback = []
         if req.method == 'POST':
-            # might add more actions later
-            if req.args.get('action', 'create') == 'create':
-                author = req.authname
+            author = req.authname
+            action = req.args.get('action', 'create')
+            if action == 'create':
                 feedback = req.args['feedback']
                 path = req.args['path']
                 created = modified = to_utimestamp(datetime.now(utc))
                 @self.env.with_transaction()
                 def add_feedback(db):
                     cursor = db.cursor()
-                    self.log.debug('Inserting feedback from %s: %s', author, 
-                                   feedback)
-                    cursor.execute('INSERT INTO project_feedback VALUES '
-                                   '(%s, %s, %s, %s, %s)', 
+                    self.log.debug('INSERT INTO project_feedback ('
+                                   'author, feedback, path, created, modified'
+                                   ") VALUES ('%s', '%s', '%s', '%s', '%s')", 
+                                   author, feedback, path, created, modified)
+                    cursor.execute('INSERT INTO project_feedback ('
+                                   'author, feedback, path, created, modified'
+                                   ') VALUES (%s, %s, %s, %s, %s)', 
                                    (author, feedback, path, created, modified))
-                if req.get_header('X-Requested-With') == 'XMLHttpRequest':
-                    req.send('{"message":"%s"}' % _("Your feedback has been "
-                                                  "received, thank you"), 
-                                                  'text/json')
-                else:
-                    req.redirect(req.href.feedback())
+                msg = _("Your feedback has been received, thank you")
+            elif action == 'delete':
+                id_ = req.args['feedback_id']
+                @self.env.with_transaction()
+                def del_feedback(db):
+                    cursor = db.cursor()
+                    if req.perm.has_permission('TRAC_ADMIN'):
+                        cursor.execute('DELETE FROM project_feedback '
+                                       'WHERE id=%s', (id_,))
+                    else:
+                        cursor.execute('DELETE FROM project_feedback '
+                                       'WHERE id=%s AND author=%s', 
+                                       (id_, author))
+                msg = _("Feedback item %s was deleted") % id_
+            if req.get_header('X-Requested-With') == 'XMLHttpRequest':
+                req.send('{"message":"%s"}' % msg, 'text/json')
+            else:
+                req.redirect(req.href.feedback())
         else:
             db = self.env.get_read_db()
             cursor = db.cursor()
             if req.perm.has_permission('TRAC_ADMIN'):
-                cursor.execute('SELECT * FROM project_feedback')
+                cursor.execute('SELECT * FROM project_feedback ORDER BY created DESC')
             else:
-                cursor.execute('SELECT * FROM project_feedback WHERE '
-                               'author=%s', (req.authname,))
+                cursor.execute('SELECT * FROM project_feedback '
+                               'WHERE author=%s ORDER BY created DESC', (req.authname,))
             feedback = list(cursor)
         return 'feedback.html', dict(href=req.href, feedback=feedback), None
 
@@ -135,15 +155,15 @@ class Feedback(Component):
     def environment_created(self):
         @self.env.with_transaction()
         def try_upgrade(db=None):
-            try:
-                self.upgrade_environment(db)
-            except:
-                pass # Already upgraded
-    
+            self.upgrade_environment(db)
+
     def environment_needs_upgrade(self, db):
         cursor = db.cursor()
         try:
-            cursor.execute('select count(*) from project_feedback')
+            sql = ('SELECT id, author, feedback, path, created, '
+                           'modified FROM project_feedback LIMIT 1')
+            self.log.debug(sql)
+            cursor.execute(sql)
             cursor.fetchone()
             return False
         except:
