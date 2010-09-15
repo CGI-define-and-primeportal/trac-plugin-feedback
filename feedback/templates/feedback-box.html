@@ -1,0 +1,12 @@
+<div xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      id="feedback-box">
+  <h3>Feedback for <a href="${href(path)}">${path}</a></h3>
+  <form id="feedback-form" action="${href.feedback()}" method="post">
+    <input type="hidden" name="path" value="${path}"/>
+    <label for="feedback-feedback">Comment:</label><br/>
+    <textarea class="wikitext trac-resizable" rows="5" name="feedback" id="feedback-feedback"></textarea><br/>
+    <input type="submit" id="send" value="Send"/>
+  </form>
+  <img id="feedback-toggler" src="${href.chrome('feedback/feedback.png')}" alt="Feedback"/>
+</div>
