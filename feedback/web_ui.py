@@ -44,7 +44,7 @@ from trac.env import IEnvironmentSetupParticipant
 from trac.db.schema import Table, Column
 from trac.db.api import DatabaseManager
 from trac.web.chrome import ITemplateProvider, add_javascript, add_stylesheet,\
-    INavigationContributor
+    INavigationContributor, Chrome
 from trac.util.translation import _
 
 
@@ -82,7 +82,7 @@ class Feedback(Component):
             return stream
         add_stylesheet(req, 'feedback/feedback.css')
         add_javascript(req, 'feedback/feedback.js')
-        add_javascript(req, 'common/js/wikitoolbar.js')
+        Chrome(self.env).add_wiki_toolbars(req)
         tmpl = TemplateLoader(self.get_templates_dirs()).load('feedback-box.html')
         path = req.path_info
         if req.query_string:

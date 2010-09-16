@@ -3,7 +3,7 @@
   right: 0;
   position: absolute;
   width: 20px; /* if changed, see feedback.js */
-  height: 78px; /* if changed, see feedback.js */
+  height: 110px; /* if changed, see feedback.js */
   padding: 0;
   border: 1px solid #ccc;
   border-right: 0;
@@ -11,6 +11,7 @@
 }
 #feedback-box textarea {
   width: 293px;
+  height: 120px;
 }
 #feedback-toggler {
   position: absolute;

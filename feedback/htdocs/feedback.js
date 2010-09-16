@@ -21,8 +21,11 @@
         feed.data('showing', false)
           .animate({
             width: 20, // see feedback.css
-            height: 78,  // see feedback.ss
-            padding: 0
+            height: 110, // see feedback.css
+            paddingLeft: 0,
+            paddingRight: 0,
+            paddingTop: 0,
+            paddingBottom: 0
           })
         toHide(feed).fadeOut('normal')
         $(this).attr('title', 'Show').animate({top: 5})
@@ -30,11 +33,14 @@
         feed.data('showing', true)
           .animate({
             width: 300,
-            height: 200,
-            padding: '0 10px 0 20px'
+            height: 240,
+            paddingLeft: 20,
+            paddingRight: 10,
+            paddingTop: 0,
+            paddingBottom: 0
           })
         toHide(feed).fadeIn('normal')
-        $(this).attr('title', 'Hide').animate({top: 85})
+        $(this).attr('title', 'Hide').animate({top: 135})
         $("#feedback-feedback").focus()
       }
     })
@@ -81,5 +87,18 @@
       })
       return false
     })
+    /*
+    // Make the box resizable
+    // (Doesn't work, apparently resizable() changes the positioning from 
+    // "right" to "left" so collapsing the box after it has been resized makes
+    // it collapse from right to left instead of the other way around)
+    feed.resizable({handles: 'n,s,w',
+                    // Change textarea width on resize
+                    resize: function(evt, ui) {
+                      // This is weird (new ta width should be feed width - padding imho)
+                      $('#feedback-feedback').width(feed.width())
+                    }
+    })
+    */ 
   })
 })(jQuery)
