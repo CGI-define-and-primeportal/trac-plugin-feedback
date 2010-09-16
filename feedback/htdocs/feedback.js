@@ -20,8 +20,8 @@
       if (feed.data('showing') == true) {
         feed.data('showing', false)
           .animate({
-            width: 25,
-            height: 110,
+            width: 20, // see feedback.css
+            height: 78,  // see feedback.ss
             padding: 0
           })
         toHide(feed).fadeOut('normal')
