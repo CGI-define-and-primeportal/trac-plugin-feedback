@@ -35,6 +35,7 @@
           })
         toHide(feed).fadeIn('normal')
         $(this).attr('title', 'Hide').animate({top: 85})
+        $("#feedback-feedback").focus()
       }
     })
     var form = feed.children('form')
