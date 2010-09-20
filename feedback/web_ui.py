@@ -158,25 +158,30 @@ class Feedback(Component):
             self.upgrade_environment(db)
 
     def environment_needs_upgrade(self, db):
-        cursor = db.cursor()
         try:
-            sql = ('SELECT id, author, feedback, path, created, '
-                           'modified FROM project_feedback LIMIT 1')
-            self.log.debug(sql)
-            cursor.execute(sql)
-            cursor.fetchone()
-            return False
-        except:
+            @self.env.with_transaction()
+            def check(db):
+                sql = ('SELECT id, author, feedback, path, created, '
+                       'modified FROM project_feedback LIMIT 1')
+                cursor = db.cursor()
+                cursor.execute(sql)
+                cursor.fetchone()
+        except Exception, e:
+            self.log.debug("Upgrade of schema needed for feedback plugin", exc_info=True)
             return True
-    
+        else:
+            return False
+
     def upgrade_environment(self, db):
+        self.log.debug("Upgrading schema for feedback plugin")
         db_backend, _ = DatabaseManager(self.env).get_connector()
         cursor = db.cursor()
         for table in self._schema:
             for stmt in db_backend.to_sql(table):
                 self.log.debug(stmt)
                 cursor.execute(stmt)
-    
+
+   
     # ITemplateProvider
     
     def get_htdocs_dirs(self):
