@@ -42,7 +42,8 @@ setup(
     packages = ['feedback'],
     package_data = {'feedback': ['htdocs/*.js',
                                  'htdocs/*.css',
-                                 'templates/*.html']}, 
+                                 'htdocs/*.png',
+                                 'templates/*.html',]}, 
     install_requires = [
     ],
     tests_require = ['nose'],
