@@ -40,8 +40,9 @@ setup(
     license = "Copyright (c) 2010, Logica. All rights reserved. Released under the 3-clause BSD license.",
     url = "https://d4.core.planetdefine.net",
     packages = ['feedback'],
-    package_data = {'feedback' : ['htdocs/*.js',
-                                        'htdocs/*.css']}, 
+    package_data = {'feedback': ['htdocs/*.js',
+                                 'htdocs/*.css',
+                                 'templates/*.html']}, 
     install_requires = [
     ],
     tests_require = ['nose'],
