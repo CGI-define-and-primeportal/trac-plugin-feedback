@@ -2,7 +2,7 @@
       xmlns:py="http://genshi.edgewall.org/"
       id="feedback-box">
   <h3>Feedback for <a href="${href(path)}">${path}</a></h3>
-  <form id="feedback-form" action="${href.feedback()}" method="post">
+  <form id="feedback-form" action="${href.ajax('feedback')}" method="post">
     <input type="hidden" name="path" value="${path}"/>
     <textarea class="wikitext trac-resizable" rows="5" cols="20" name="feedback" id="feedback-feedback"></textarea><br/>
     <input type="submit" id="send" value="Send"/>

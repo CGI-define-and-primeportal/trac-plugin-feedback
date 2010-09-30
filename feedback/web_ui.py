@@ -46,12 +46,13 @@ from trac.db.api import DatabaseManager
 from trac.web.chrome import ITemplateProvider, add_javascript, add_stylesheet,\
     INavigationContributor, Chrome
 from trac.util.translation import _
+from trac.admin.api import IAdminPanelProvider
 
 
 class Feedback(Component):
     realms = ListOption('feedback', 'realms', '*',
                         doc="Show feedback option in these realms")
-    implements(ITemplateStreamFilter, IRequestHandler, INavigationContributor,
+    implements(ITemplateStreamFilter, IRequestHandler, IAdminPanelProvider,
                IEnvironmentSetupParticipant, ITemplateProvider)
     
     _schema = [Table('project_feedback', key='id')[
@@ -62,18 +63,15 @@ class Feedback(Component):
                    Column('created', type='int64'),
                    Column('modified', type='int64')]]
     
-    # INavigationContributor
+    # IAdminPanelProvider
     
-    def get_active_navigation_item(self, req):
-        if (req.perm.has_permission('TRAC_ADMIN') and 
-                req.path_info.startswith("/feedback")):
-            return 'feedback'
-        return ''
-
-    def get_navigation_items(self, req):
-        if req.perm.has_permission('TRAC_ADMIN'):
-            yield ('mainnav', 'feedback', 
-                   tag.a("Feedback", href=req.href.feedback()))
+    def get_admin_panels(self, req):
+        yield ('feedback', _('Feedback'), 'index', _('Feedback'))
+    
+    def render_admin_panel(self, req, category, page, path_info):
+        feedback = self._get_feedback_list(req)
+        return 'feedback.html', dict(href=req.href, feedback=feedback)
+        
             
     # ITemplateStreamFilter
     
@@ -92,8 +90,10 @@ class Feedback(Component):
         return stream
     
     # IRequestHandler
-    _url_re = re.compile(r'^/feedback(?:/(\d+))?/?$')
+    _url_re = re.compile(r'^/ajax/feedback(?:/(\d+))?/?$')
     def match_request(self, req):
+        if not req.method == 'POST':
+            return False
         m = self._url_re.search(req.path_info)
         if m is None:
             return False
@@ -102,54 +102,59 @@ class Feedback(Component):
         return True
     
     def process_request(self, req):
-        feedback = []
         if req.method == 'POST':
-            author = req.authname
-            action = req.args.get('action', 'create')
-            if action == 'create':
-                feedback = req.args['feedback']
-                path = req.args['path']
-                created = modified = to_utimestamp(datetime.now(utc))
-                @self.env.with_transaction()
-                def add_feedback(db):
-                    cursor = db.cursor()
-                    self.log.debug('INSERT INTO project_feedback ('
-                                   'author, feedback, path, created, modified'
-                                   ") VALUES ('%s', '%s', '%s', '%s', '%s')", 
-                                   author, feedback, path, created, modified)
-                    cursor.execute('INSERT INTO project_feedback ('
-                                   'author, feedback, path, created, modified'
-                                   ') VALUES (%s, %s, %s, %s, %s)', 
-                                   (author, feedback, path, created, modified))
-                msg = _("Your feedback has been received, thank you")
-            elif action == 'delete':
-                id_ = req.args['feedback_id']
-                @self.env.with_transaction()
-                def del_feedback(db):
-                    cursor = db.cursor()
-                    if req.perm.has_permission('TRAC_ADMIN'):
-                        cursor.execute('DELETE FROM project_feedback '
-                                       'WHERE id=%s', (id_,))
-                    else:
-                        cursor.execute('DELETE FROM project_feedback '
-                                       'WHERE id=%s AND author=%s', 
-                                       (id_, author))
-                msg = _("Feedback item %s was deleted") % id_
-            if req.get_header('X-Requested-With') == 'XMLHttpRequest':
-                req.send('{"message":"%s"}' % msg, 'text/json')
-            else:
-                req.redirect(req.href.feedback())
+            msg = self._update_feedback(req)
+            req.send('{"message":"%s"}' % msg, 'text/json')
         else:
-            db = self.env.get_read_db()
-            cursor = db.cursor()
-            if req.perm.has_permission('TRAC_ADMIN'):
-                cursor.execute('SELECT * FROM project_feedback ORDER BY created DESC')
-            else:
-                cursor.execute('SELECT * FROM project_feedback '
-                               'WHERE author=%s ORDER BY created DESC', (req.authname,))
-            feedback = list(cursor)
-        return 'feedback.html', dict(href=req.href, feedback=feedback), None
-
+            feedback = self._get_feedback_list(req)
+            return 'feedback.html', dict(href=req.href, feedback=feedback), None
+            
+    def _get_feedback_list(self, req):
+        db = self.env.get_read_db()
+        cursor = db.cursor()
+        if req.perm.has_permission('TRAC_ADMIN'):
+            cursor.execute('SELECT * FROM project_feedback ORDER BY created DESC')
+        else:
+            cursor.execute('SELECT * FROM project_feedback '
+                           'WHERE author=%s ORDER BY created DESC', (req.authname,))
+        return list(cursor)
+        #return 'feedback.html', dict(href=req.href, feedback=feedback), None
+    
+    def _update_feedback(self, req):
+        author = req.authname
+        action = req.args.get('action', 'create')
+        msg = None
+        if action == 'create':
+            feedback = req.args['feedback']
+            path = req.args['path']
+            created = modified = to_utimestamp(datetime.now(utc))
+            @self.env.with_transaction()
+            def add_feedback(db):
+                cursor = db.cursor()
+                self.log.debug('INSERT INTO project_feedback ('
+                               'author, feedback, path, created, modified'
+                               ") VALUES ('%s', '%s', '%s', '%s', '%s')", 
+                               author, feedback, path, created, modified)
+                cursor.execute('INSERT INTO project_feedback ('
+                               'author, feedback, path, created, modified'
+                               ') VALUES (%s, %s, %s, %s, %s)', 
+                               (author, feedback, path, created, modified))
+            msg = _("Your feedback has been received, thank you")
+        elif action == 'delete':
+            id_ = req.args['feedback_id']
+            @self.env.with_transaction()
+            def del_feedback(db):
+                cursor = db.cursor()
+                if req.perm.has_permission('TRAC_ADMIN'):
+                    cursor.execute('DELETE FROM project_feedback '
+                                   'WHERE id=%s', (id_,))
+                else:
+                    cursor.execute('DELETE FROM project_feedback '
+                                   'WHERE id=%s AND author=%s', 
+                                   (id_, author))
+            msg = _("Feedback item %s was deleted") % id_
+        return msg
+    
     # IEnvironmentSetupParticipant
     
     def environment_created(self):
