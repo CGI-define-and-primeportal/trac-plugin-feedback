@@ -1,13 +1,19 @@
+
 #feedback-box {
-  bottom: 50px;
+  position: fixed;
+  bottom: 50px; /* -50 in the IE6 hack expression below */
   right: 0;
-  position: absolute;
   width: 20px; /* if changed, see feedback.js */
   height: 110px; /* if changed, see feedback.js */
   padding: 0;
   border: 1px solid #ccc;
   border-right: 0;
-  background: inherit;
+  background: white;
+  z-index: 1000;
+}
+* html #feedback-box { /*--IE6 Hack - Fixed Positioning to the Bottom--*/
+	position: absolute;
+	top: expression(eval((document.compatMode && document.compatMode=='CSS1Compat') ? documentElement.scrollTop + (documentElement.clientHeight - this.clientHeight) : document.body.scrollTop + (document.body.clientHeight - this.clientHeight)) - 50);
 }
 #feedback-box textarea {
   width: 293px;
@@ -18,8 +24,4 @@
   top: 5px;
   left: 5px;
   cursor: pointer;
-}
-#feedback-list {
-  width: 50%;
-  margin: 0 auto;
 }

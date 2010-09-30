@@ -14,7 +14,6 @@
     var feed = $('#feedback-box'),
         toggler = $('#feedback-toggler')
     feed.css('display', 'block').data('showing', false)
-        .css('bottom', $('#footer').height()) // Might calculate a better position later
     toHide(feed).hide()
     toggler.click(function() {
       if (feed.data('showing') == true) {
@@ -27,8 +26,8 @@
             paddingTop: 0,
             paddingBottom: 0
           })
-        toHide(feed).fadeOut('normal')
         $(this).attr('title', 'Show').animate({top: 5})
+        toHide(feed).fadeOut('normal')
       } else {
         feed.data('showing', true)
           .animate({
@@ -39,8 +38,8 @@
             paddingTop: 0,
             paddingBottom: 0
           })
-        toHide(feed).fadeIn('normal')
         $(this).attr('title', 'Hide').animate({top: 135})
+        toHide(feed).fadeIn('normal')
         $("#feedback-feedback").focus()
       }
     })
