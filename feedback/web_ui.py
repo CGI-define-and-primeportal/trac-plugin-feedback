@@ -44,7 +44,7 @@ from trac.env import IEnvironmentSetupParticipant
 from trac.db.schema import Table, Column
 from trac.db.api import DatabaseManager
 from trac.web.chrome import ITemplateProvider, add_javascript, add_stylesheet,\
-    INavigationContributor, Chrome
+    Chrome
 from trac.util.translation import _
 from trac.admin.api import IAdminPanelProvider
 
@@ -66,7 +66,8 @@ class Feedback(Component):
     # IAdminPanelProvider
     
     def get_admin_panels(self, req):
-        yield ('feedback', _('Feedback'), 'index', _('Feedback'))
+        if req.perm.has_permission('TRAC_ADMIN'):
+            yield ('feedback', _('Feedback'), 'index', _('Feedback'))
     
     def render_admin_panel(self, req, category, page, path_info):
         feedback = self._get_feedback_list(req)

@@ -29,11 +29,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 setup(
-    name = 'FeedbackPlugin', 
-    version = '0.0',
+    name = 'FeedbackPlugin',
+    version = '0.1',
     author = 'Pontus Enmark',
     author_email = 'pontus.enmark@logica.com',
     description = "Trac quick user feedback plugin",
