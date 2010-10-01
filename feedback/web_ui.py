@@ -93,7 +93,7 @@ class Feedback(Component):
     # IRequestHandler
     _url_re = re.compile(r'^/ajax/feedback(?:/(\d+))?/?$')
     def match_request(self, req):
-        if not req.method == 'POST':
+        if req.authname == 'anonymous' or not req.method == 'POST':
             return False
         m = self._url_re.search(req.path_info)
         if m is None:
