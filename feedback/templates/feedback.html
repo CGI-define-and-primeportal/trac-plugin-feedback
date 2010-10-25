@@ -5,19 +5,24 @@
     <title>Feedback</title>
   </head>
   <body>
+  <div id="sub-main-right">
     <div id="feedback-list">
       <form style="display:hidden" id="token-form" method="post">
         <div>
           <input type="hidden" name="action" value="delete"/>
         </div>
       </form>
-      <h2>Commented Pages</h2>
-      <ul py:for="id, author, comment, path, created, modified in feedback">
-        <li>${authorinfo(author)} submitted feedback on <a href="${href(path)}">${path}</a> ${dateinfo(created)} ago
-           [<a class="delete" href="${href.feedback(id)}">Remove</a>] 
-           <div xml:space="preserve">${wiki_to_html(context, comment)}</div>
+      <h3>Commented Pages</h3>
+      <ul py:for="id, author, comment, path, created, modified in feedback" class="list">
+        <li id="feedback">
+           <div xml:space="preserve">${wiki_to_html(context, comment)}
+           By ${authorinfo(author)} submitted feedback on <a href="${href(path)}">${path}</a> ${dateinfo(created)} ago </div>
+           <br>
+           <a class="delete" href="${href.feedback(id)}">Remove</a>
+            </br>
         </li>
       </ul>
     </div>
+  </div>
   </body>
 </html>
