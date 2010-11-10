@@ -32,7 +32,6 @@
 # @author enmarkp
 import re
 from datetime import datetime
-from genshi.builder import tag
 from genshi.filters.transform import Transformer
 from genshi.template.loader import TemplateLoader
 from pkg_resources import resource_filename
@@ -43,8 +42,7 @@ from trac.web.api import IRequestHandler, ITemplateStreamFilter
 from trac.env import IEnvironmentSetupParticipant
 from trac.db.schema import Table, Column
 from trac.db.api import DatabaseManager
-from trac.web.chrome import ITemplateProvider, add_javascript, add_stylesheet,\
-    Chrome
+from trac.web.chrome import ITemplateProvider, add_javascript, add_stylesheet, Chrome
 from trac.util.translation import _
 from trac.admin.api import IAdminPanelProvider
 
@@ -54,7 +52,7 @@ class Feedback(Component):
                         doc="Show feedback option in these realms")
     implements(ITemplateStreamFilter, IRequestHandler, IAdminPanelProvider,
                IEnvironmentSetupParticipant, ITemplateProvider)
-    
+
     _schema = [Table('project_feedback', key='id')[
                    Column('id', type='int', auto_increment=True),
                    Column('author'),
@@ -62,20 +60,19 @@ class Feedback(Component):
                    Column('path'),
                    Column('created', type='int64'),
                    Column('modified', type='int64')]]
-    
+
     # IAdminPanelProvider
-    
+
     def get_admin_panels(self, req):
         if req.perm.has_permission('TRAC_ADMIN'):
             yield ('feedback', _('Feedback'), 'index', _('Feedback'))
-    
+
     def render_admin_panel(self, req, category, page, path_info):
         feedback = self._get_feedback_list(req)
-        return 'feedback.html', dict(href=req.href, feedback=feedback)
-        
-            
+        return 'feedback.html', dict(feedback=feedback)
+
     # ITemplateStreamFilter
-    
+
     def filter_stream(self, req, method, filename, stream, data):
         if req.authname == 'anonymous':
             return stream
@@ -89,7 +86,7 @@ class Feedback(Component):
         feedbackbox = tmpl.generate(href=req.href, path=path)
         stream |= Transformer('//body').append(feedbackbox)
         return stream
-    
+
     # IRequestHandler
     _url_re = re.compile(r'^/ajax/feedback(?:/(\d+))?/?$')
     def match_request(self, req):
@@ -101,15 +98,15 @@ class Feedback(Component):
         id_ = m.group(1)
         req.args['feedback_id'] = id_ and int(id_) or None
         return True
-    
+
     def process_request(self, req):
         if req.method == 'POST':
             msg = self._update_feedback(req)
             req.send('{"message":"%s"}' % msg, 'text/json')
         else:
             feedback = self._get_feedback_list(req)
-            return 'feedback.html', dict(href=req.href, feedback=feedback), None
-            
+            return 'feedback.html', dict(feedback=feedback), None
+
     def _get_feedback_list(self, req):
         db = self.env.get_read_db()
         cursor = db.cursor()
@@ -119,8 +116,7 @@ class Feedback(Component):
             cursor.execute('SELECT * FROM project_feedback '
                            'WHERE author=%s ORDER BY created DESC', (req.authname,))
         return list(cursor)
-        #return 'feedback.html', dict(href=req.href, feedback=feedback), None
-    
+
     def _update_feedback(self, req):
         author = req.authname
         action = req.args.get('action', 'create')
@@ -155,9 +151,9 @@ class Feedback(Component):
                                    (id_, author))
             msg = _("Feedback item %s was deleted") % id_
         return msg
-    
+
     # IEnvironmentSetupParticipant
-    
+
     def environment_created(self):
         @self.env.with_transaction()
         def try_upgrade(db=None):
@@ -172,7 +168,7 @@ class Feedback(Component):
                 cursor = db.cursor()
                 cursor.execute(sql)
                 cursor.fetchone()
-        except Exception, e:
+        except Exception:
             self.log.debug("Upgrade of schema needed for feedback plugin", exc_info=True)
             return True
         else:
@@ -187,11 +183,10 @@ class Feedback(Component):
                 self.log.debug(stmt)
                 cursor.execute(stmt)
 
-   
     # ITemplateProvider
-    
+
     def get_htdocs_dirs(self):
         return [('feedback', resource_filename(__name__, 'htdocs'))]
-    
+
     def get_templates_dirs(self):
         return [resource_filename(__name__, 'templates')]
