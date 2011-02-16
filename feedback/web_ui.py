@@ -80,11 +80,8 @@ class Feedback(Component):
         add_javascript(req, 'feedback/feedback.js')
         Chrome(self.env).add_wiki_toolbars(req)
         tmpl = TemplateLoader(self.get_templates_dirs()).load('feedback-box.html')
-        path = req.path_info
-        if req.query_string:
-            path = '%s?%s' % (path, req.query_string)
-        feedbackbox = tmpl.generate(href=req.href, path=path)
-        stream |= Transformer('//body').append(feedbackbox)
+        feedbackbox = tmpl.generate(req=req)
+        stream |= Transformer('//div[@id="footer"]').append(feedbackbox)
         return stream
 
     # IRequestHandler

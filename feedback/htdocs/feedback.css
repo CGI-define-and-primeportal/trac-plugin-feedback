@@ -1,27 +1,14 @@
-
-#feedback-box {
-  position: fixed;
-  bottom: 50px; /* -50 in the IE6 hack expression below */
-  right: 0;
-  width: 20px; /* if changed, see feedback.js */
-  height: 110px; /* if changed, see feedback.js */
-  padding: 0;
-  border: 1px solid #ccc;
-  border-right: 0;
-  background: white;
-  z-index: 1000;
+#feedback-trigger {
+  float: right;
+  line-height: 30px;
+  margin-right: 10px;
 }
-* html #feedback-box { /*--IE6 Hack - Fixed Positioning to the Bottom--*/
-	position: absolute;
-	top: expression(eval((document.compatMode && document.compatMode=='CSS1Compat') ? documentElement.scrollTop + (documentElement.clientHeight - this.clientHeight) : document.body.scrollTop + (document.body.clientHeight - this.clientHeight)) - 50);
+#feedback-trigger a {
+  color: #555;
 }
-#feedback-box textarea {
-  width: 293px;
-  height: 120px;
+#feedback-feedback {
+  width: 389px;
 }
-#feedback-toggler {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  cursor: pointer;
+#feedback-dialog {
+  display: none;
 }
