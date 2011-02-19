@@ -3,12 +3,13 @@
   line-height: 30px;
   margin-right: 10px;
 }
-#feedback-trigger a {
-  color: #555;
-}
+
 #feedback-feedback {
   width: 389px;
 }
 #feedback-dialog {
   display: none;
 }
+
+#feedback-dialog h3 {font-size: 12px; font-weight: normal}
+#feedback-dialog input {float: right; margin-right: 43px;}
