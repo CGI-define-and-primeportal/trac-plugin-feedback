@@ -38,7 +38,7 @@ setup(
     author_email = 'pontus.enmark@logica.com',
     description = "Trac quick user feedback plugin",
     license = "Copyright (c) 2010, Logica. All rights reserved. Released under the 3-clause BSD license.",
-    url = "https://d4.core.planetdefine.net",
+    url = "https://d4.define.logica.com",
     packages = ['feedback'],
     package_data = {'feedback': ['htdocs/*.js',
                                  'htdocs/*.css',
