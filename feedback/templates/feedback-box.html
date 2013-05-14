@@ -1,0 +1,11 @@
+<div xmlns="http://www.w3.org/1999/xhtml"
+     xmlns:py="http://genshi.edgewall.org/"
+     id="feedback-dialog"
+     title="feedback">
+  <h3>Feedback for <a href="">${req.path_info}</a></h3>
+  <form id="feedback-form" action="${req.href.ajax('feedback')}" method="post">
+    <input type="hidden" name="path" value="req.href(req.path_info + (req.query_string and '?%s' % req.query_string or ''))"/>
+    <textarea class="wikitext trac-resizable" rows="10" cols="61" name="feedback" id="feedback-feedback"></textarea><br/>
+    <input type="submit" id="send" value="Send"/>
+  </form>
+</div>
